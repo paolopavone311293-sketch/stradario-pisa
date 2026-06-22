@@ -1,0 +1,43 @@
+🔧 CONFIGURAZIONE SUPABASE - Leggi Prima!
+=====================================================
+
+Dopo aver creato il nuovo progetto Supabase (vedi ISTRUZIONI.md Passo 1),
+devi inserire le tue credenziali in index.html.
+
+PASSAGGI:
+=====================================================
+
+1. Vai su https://app.supabase.com
+2. Seleziona il tuo nuovo progetto "Stradario Santa Croce"
+3. In basso a sinistra, clicca l'ingranaggio (⚙️ Project Settings)
+4. A sinistra, clicca "API"
+5. Copia il valore accanto a "Project URL" (es: https://xyz.supabase.co)
+6. Copia il valore accanto a "anon public" (la chiave lunga)
+
+METTI NEL FILE:
+=====================================================
+
+Apri index.html con Notepad:
+- Cerca queste righe (circa riga 380):
+
+    const SUPABASE_URL = "https://TUO-PROJECT-URL.supabase.co";
+    const SUPABASE_KEY = "TUA-ANON-PUBLIC-KEY";
+    const ADMIN_PASSWORD = "password123";
+
+Sostituisci:
+- "https://TUO-PROJECT-URL.supabase.co" con il tuo Project URL
+  Esempio: "https://abcdefghijk.supabase.co"
+
+- "TUA-ANON-PUBLIC-KEY" con la tua chiave anon
+  Esempio: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc..."
+
+- "password123" con la password che vuoi (es: "MiaPassword2024")
+
+ESEMPIO FINALE:
+=====================================================
+
+    const SUPABASE_URL = "https://abcdefghijk.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc...";
+    const ADMIN_PASSWORD = "MiaPassword2024";
+
+SALVA IL FILE e sei pronto!
