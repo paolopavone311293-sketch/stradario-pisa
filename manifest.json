@@ -1,7 +1,7 @@
 {
-  "name": "Stradario Pisa",
+  "name": "Stradario Santa Croce",
   "short_name": "Stradario",
-  "description": "App per cercare le strade di Pisa",
+  "description": "App per cercare le strade di Santa Croce sull'Arno",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

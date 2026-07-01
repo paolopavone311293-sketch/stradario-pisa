@@ -4,10 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#d4af37" />
-  <title>Stradario Pisa</title>
+  <title>Stradario Santa Croce</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
+    :root {
+      --gold: #d4af37;
+      --gold-light: #e6c65c;
+      --gold-dark: #b8952e;
+      --bg: #17181a;
+      --bg-elevated: #1f2023;
+      --surface: #26282b;
+      --surface-hover: #2e3033;
+      --border: #35373b;
+      --text: #f2f2f2;
+      --text-muted: #9a9a9d;
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+      --success: #22c55e;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
     * {
       margin: 0;
       padding: 0;
@@ -15,8 +36,9 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #202124;
-      color: #fff;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
     }
     .container {
       max-width: 100%;
@@ -25,99 +47,226 @@
       flex-direction: column;
     }
     .header {
-      background: #d4af37;
-      color: #000;
-      padding: 15px 20px;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 55%, var(--gold-dark) 100%);
+      color: #1a1a1a;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 14px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+      border-radius: 0 0 22px 22px;
+      position: relative;
+      z-index: 10;
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .header-icon {
+      font-size: 17px;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .menu-btn {
-      background: none;
-      border: none;
-      font-size: 28px;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       cursor: pointer;
-      color: #000;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+    .menu-btn svg {
+      display: block;
+    }
+    .menu-btn:hover {
+      background: rgba(255, 255, 255, 0.36);
+    }
+    .menu-btn:active {
+      transform: scale(0.93);
+    }
+    .search-wrap {
+      position: relative;
+      margin: 12px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8a8a8a;
+      pointer-events: none;
+      font-size: 15px;
     }
     .search-box {
-      padding: 10px 15px;
-      margin: 10px;
-      border-radius: 20px;
-      border: none;
-      font-size: 16px;
-      background: #fff;
-      color: #000;
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .search-box::placeholder {
+      color: var(--text-muted);
+    }
+    .search-box:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
     }
     .list-container {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
+      padding: 4px 10px 90px;
     }
     .card {
-      background: #2d2d2d;
-      margin: 8px 10px;
-      padding: 12px;
-      border-radius: 8px;
-      border-left: 5px solid #d4af37;
+      background: var(--surface);
+      margin: 8px 2px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--gold);
       cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .card:hover {
+      background: var(--surface-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+    .card:active {
+      transform: translateY(0);
     }
     .card-title {
-      font-size: 18px;
-      font-weight: bold;
+      font-size: 17px;
+      font-weight: 600;
       margin-bottom: 8px;
     }
     .card-info {
-      font-size: 14px;
-      color: #ddd;
-      margin: 4px 0;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin: 3px 0;
+      display: flex;
+      gap: 6px;
     }
+    .no-results, .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    .no-results .icon, .loading-state .icon {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .fab {
+      position: fixed;
+      right: 20px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #1a1a1a;
+      border: none;
+      font-size: 28px;
+      font-weight: 400;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      transition: transform 0.15s ease;
+    }
+    .fab:hover { transform: scale(1.06); }
+    .fab:active { transform: scale(0.96); }
+
     .menu-overlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(2px);
       z-index: 999;
+      opacity: 0;
+      transition: opacity 0.25s ease;
     }
     .menu-overlay.active {
       display: block;
+      opacity: 1;
     }
     .menu-panel {
       position: fixed;
       top: 0;
-      left: -280px;
+      left: -300px;
       width: 280px;
       height: 100vh;
-      background: #1e1e1e;
+      background: var(--bg-elevated);
       z-index: 1000;
-      transition: left 0.3s;
+      transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
       overflow-y: auto;
+      box-shadow: var(--shadow-lg);
     }
     .menu-panel.active {
       left: 0;
     }
     .menu-header {
-      background: #d4af37;
-      color: #000;
-      padding: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #1a1a1a;
+      padding: 24px 20px;
+      font-size: 19px;
+      font-weight: 700;
     }
     .menu-item {
-      color: #fff;
+      color: var(--text);
       padding: 15px 20px;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--border);
       cursor: pointer;
-      font-size: 18px;
+      font-size: 16px;
+      transition: background 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .menu-item:hover {
-      background: #333;
+      background: var(--surface-hover);
     }
     .modal-content .menu-item {
-      color: #000;
+      color: #1a1a1a;
+      border-radius: var(--radius-sm);
     }
     .modal-content .menu-item:hover {
       background: #f0f0f0;
@@ -125,132 +274,375 @@
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(2px);
       z-index: 1001;
       align-items: center;
       justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
     .modal.active {
       display: flex;
+      opacity: 1;
     }
     .modal-content {
       background: #fff;
-      color: #000;
-      border-radius: 15px;
-      padding: 20px;
+      color: #1a1a1a;
+      border-radius: var(--radius-lg);
+      padding: 22px;
       width: 90%;
-      max-width: 500px;
+      max-width: 460px;
       max-height: 90vh;
       overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.96) translateY(8px);
+      transition: transform 0.2s ease;
+    }
+    .modal.active .modal-content {
+      transform: scale(1) translateY(0);
     }
     .modal-title {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 15px;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .modal-message {
+      font-size: 15px;
+      color: #444;
+      margin-bottom: 18px;
+      line-height: 1.4;
     }
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
     .form-group label {
       display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #333;
     }
-    .form-group input {
+    .form-group input,
+    .form-group select {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 11px 12px;
+      border: 1.5px solid #ddd;
+      border-radius: var(--radius-sm);
+      font-size: 14.5px;
+      background: #fafafa;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+      background: #fff;
     }
     .btn {
       width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      padding: 14px;
+      border: 1.5px solid transparent;
+      border-radius: 14px;
+      font-size: 15.5px;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 700;
       margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: filter 0.15s ease, transform 0.1s ease, background 0.15s ease,
+        box-shadow 0.15s ease, border-color 0.15s ease;
     }
+    .btn:active { transform: scale(0.97); }
     .btn-primary {
-      background: #d4af37;
-      color: #000;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      color: #1a1a1a;
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 6px 18px rgba(212, 175, 55, 0.45);
     }
     .btn-secondary {
-      background: #444;
-      color: #fff;
+      background: #fff;
+      color: #333;
+      border-color: #ddd;
+    }
+    .btn-secondary:hover {
+      background: #f5f5f5;
+      border-color: #ccc;
     }
     .btn-danger {
-      background: #ff4444;
+      background: linear-gradient(135deg, #f66, var(--danger));
       color: #fff;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
     }
-    .no-results {
-      text-align: center;
-      padding: 40px 20px;
+    .btn-danger:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+    }
+    .btn-danger-outline {
+      background: transparent;
+      color: var(--danger-dark);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger-outline:hover {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-row .btn { margin-top: 0; }
+
+    .sheet-modal {
+      align-items: flex-end;
+    }
+    .sheet-content {
+      width: 100%;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 22px 22px 0 0;
+      padding: 10px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sheet-modal.active .sheet-content {
+      transform: translateY(0);
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 4px auto 12px;
+    }
+    .sheet-title {
+      font-size: 14.5px;
+      font-weight: 700;
       color: #888;
-      font-size: 18px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding-bottom: 12px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #eee;
     }
+    .sheet-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 8px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .sheet-item:hover {
+      background: #f5f5f5;
+    }
+    .sheet-item:active {
+      background: #ececec;
+    }
+    .sheet-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .sheet-cancel {
+      margin-top: 14px;
+    }
+
+    .form-sheet {
+      display: flex;
+      flex-direction: column;
+      max-height: 85vh;
+    }
+    .sheet-form-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      margin: 0 -14px 10px;
+      padding: 0 14px 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .sheet-form-header .modal-title {
+      margin-bottom: 0;
+    }
+    .sheet-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #f0f0f0;
+      color: #444;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+    .sheet-close:hover {
+      background: #e2e2e2;
+    }
+    .sheet-form-body {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 4px;
+    }
+    .sheet-form-footer {
+      flex-shrink: 0;
+      margin: 12px -14px 0;
+      padding: 14px 14px 0;
+      border-top: 1px solid #eee;
+    }
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+    .form-row .form-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 2000;
+      align-items: center;
+      width: 92%;
+      max-width: 380px;
+    }
+    .toast {
+      background: var(--surface);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 14.5px;
+      box-shadow: var(--shadow-lg);
+      border-left: 4px solid var(--gold);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      width: 100%;
+      text-align: center;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast-success { border-left-color: var(--success); }
+    .toast-error { border-left-color: var(--danger); }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <button class="menu-btn" onclick="toggleMenu()">☰</button>
-      <h1>📍 Stradario Pisa</h1>
+      <button class="menu-btn" onclick="toggleMenu()" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 6H21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" />
+          <path d="M3 12H21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" />
+          <path d="M3 18H21" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" />
+        </svg>
+      </button>
+      <div class="header-title">
+        <span class="header-icon">📍</span>
+        <h1>Stradario Santa Croce</h1>
+      </div>
     </div>
-    <input type="text" class="search-box" id="search" placeholder="Cerca via, città o zona..." onkeyup="filterStrade()" />
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-box" id="search" placeholder="Cerca via, città o zona..." onkeyup="filterStrade()" />
+    </div>
     <div class="list-container" id="list"></div>
   </div>
 
+  <button class="fab" id="fab" onclick="openAddModal()" title="Nuova Via">+</button>
+
   <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
   <div class="menu-panel" id="menuPanel">
-    <div class="menu-header">📍 Stradario Pisa v1.0</div>
+    <div class="menu-header">📍 Stradario Santa Croce</div>
     <div class="menu-item" onclick="openAddModal()">➕ Nuova Via</div>
-    <div class="menu-item" onclick="openLoginModal()">🔐 Accedi Admin</div>
+    <div class="menu-item" id="loginMenuItem" onclick="openLoginModal()">🔐 Accedi Admin</div>
+    <div class="menu-item" id="logoutMenuItem" onclick="logoutAdmin()" style="display:none">🔓 Esci Admin</div>
     <div class="menu-item" onclick="exportExcel()">📊 Esporta Excel</div>
-    <div style="flex: 1"></div>
     <div class="menu-item" onclick="toggleMenu()">✕ Chiudi</div>
   </div>
 
-  <div class="modal" id="addModal">
-    <div class="modal-content">
-      <div class="modal-title" id="addModalTitle">Nuova Via</div>
-      <div class="form-group">
-        <label>Colonna A (es: VIA DELL')</label>
-        <input type="text" id="colonnaA" placeholder="VIA, VICOLO, PIAZZALE..." />
+  <div class="modal sheet-modal" id="addModal">
+    <div class="modal-content sheet-content form-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-form-header">
+        <div class="modal-title" id="addModalTitle">Nuova Via</div>
+        <button class="sheet-close" onclick="closeAddModal()" aria-label="Chiudi">✕</button>
       </div>
-      <div class="form-group">
-        <label>Colonna B</label>
-        <input type="text" id="colonnaB" placeholder="del, della, dell', degli, di..." />
+      <div class="sheet-form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Colonna A</label>
+            <input type="text" id="colonnaA" placeholder="VIA, VICOLO..." />
+          </div>
+          <div class="form-group">
+            <label>Colonna B</label>
+            <input type="text" id="colonnaB" placeholder="del, della, dell'..." />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Via</label>
+          <input type="text" id="via" placeholder="Nome della via" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="zona">Zona</label>
+            <select id="zona" name="zona">
+              <option value="">-- Zona --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="citta">Città</label>
+            <select id="citta" name="citta">
+              <option value="">-- Città --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="numeri">Numeri civici</label>
+          <input type="text" id="numeri" name="numeri" placeholder="Es: DAL 1 AL 50, TUTTI..." />
+        </div>
       </div>
-      <div class="form-group">
-        <label>Via</label>
-        <input type="text" id="via" placeholder="Nome della via" />
+      <div class="sheet-form-footer">
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="closeAddModal()">Annulla</button>
+          <button class="btn btn-primary" onclick="saveStrada()">Salva</button>
+        </div>
+        <div id="deleteBtn"></div>
       </div>
-      <div class="form-group">
-        <label for="zona">Zona</label>
-        <select id="zona" name="zona" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-          <option value="">-- Seleziona Zona --</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="numeri">Numeri civici</label>
-        <input type="text" id="numeri" name="numeri" placeholder="Es: DAL 1 AL 50, TUTTI..." />
-      </div>
-      <div class="form-group">
-        <label for="citta">Città</label>
-        <select id="citta" name="citta" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-          <option value="">-- Seleziona Città --</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="saveStrada()">💾 Salva</button>
-      <button class="btn btn-secondary" onclick="closeAddModal()">Annulla</button>
-      <div id="deleteBtn"></div>
     </div>
   </div>
 
@@ -266,18 +658,37 @@
     </div>
   </div>
 
-  <div class="modal" id="optionsModal">
-    <div class="modal-content">
-      <div class="menu-item" onclick="editStrada()">✏️ Modifica</div>
-      <div class="menu-item" onclick="openMaps()">📍 Apri Google Maps</div>
-      <div class="menu-item" onclick="closeOptionsModal()">❌ Annulla</div>
+  <div class="modal sheet-modal" id="optionsModal">
+    <div class="modal-content sheet-content">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="optionsTitle"></div>
+      <div class="sheet-item" onclick="editStrada()">
+        <span class="sheet-icon">✏️</span> Modifica
+      </div>
+      <div class="sheet-item" onclick="openMaps()">
+        <span class="sheet-icon">📍</span> Apri Google Maps
+      </div>
+      <button class="btn btn-secondary sheet-cancel" onclick="closeOptionsModal()">Annulla</button>
     </div>
   </div>
+
+  <div class="modal" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-title">⚠️ Conferma</div>
+      <div class="modal-message" id="confirmMessage"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="confirmNo">Annulla</button>
+        <button class="btn btn-danger" id="confirmYes">Elimina</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
 
   <script>
     const SUPABASE_URL = "https://zltsdiaefuokeuuwdxfp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_TF4NSM-LZVfT-dVPeSCdPA_dK0flzt6";
-    const ADMIN_PASSWORD = "Emilia370";
+    const ADMIN_EMAIL = "stradario@gmail.com";
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -289,22 +700,60 @@
     let allZone = [];
     let allCitta = [];
 
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+    }
+
+    function showToast(message, type = "success", duration = 3000) {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("show"));
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 250);
+      }, duration);
+    }
+
+    function showConfirm(message) {
+      return new Promise((resolve) => {
+        document.getElementById("confirmMessage").textContent = message;
+        const modal = document.getElementById("confirmModal");
+        const yesBtn = document.getElementById("confirmYes");
+        const noBtn = document.getElementById("confirmNo");
+        modal.classList.add("active");
+        const cleanup = (result) => {
+          modal.classList.remove("active");
+          yesBtn.onclick = null;
+          noBtn.onclick = null;
+          resolve(result);
+        };
+        yesBtn.onclick = () => cleanup(true);
+        noBtn.onclick = () => cleanup(false);
+      });
+    }
+
     async function loadStrade() {
+      document.getElementById("list").innerHTML = `
+        <div class="loading-state"><div class="spinner"></div>Caricamento strade...</div>
+      `;
       try {
-        const { data, error } = await supabaseClient.from("strade_pisa").select("*").order("nome_completo");
+        const { data, error } = await supabaseClient.from("strade").select("*").order("nome_completo");
         if (error) throw error;
         allStrade = data || [];
 
-        // Estrai zone e città uniche
         allZone = [...new Set(allStrade.map(s => s.zona).filter(z => z))].sort();
         allCitta = [...new Set(allStrade.map(s => s.citta).filter(c => c))].sort();
 
-        // Popola i dropdown
         populateDropdowns();
         filterStrade();
       } catch (error) {
         console.error("Errore:", error);
-        document.getElementById("list").innerHTML = '<div class="no-results">Errore di connessione a Supabase</div>';
+        document.getElementById("list").innerHTML = '<div class="no-results"><span class="icon">⚠️</span>Errore di connessione a Supabase</div>';
       }
     }
 
@@ -312,7 +761,9 @@
       const zonaSelect = document.getElementById("zona");
       const cittaSelect = document.getElementById("citta");
 
-      // Popola zone
+      zonaSelect.innerHTML = '<option value="">-- Seleziona Zona --</option>';
+      cittaSelect.innerHTML = '<option value="">-- Seleziona Città --</option>';
+
       allZone.forEach(z => {
         const option = document.createElement("option");
         option.value = z;
@@ -320,7 +771,6 @@
         zonaSelect.appendChild(option);
       });
 
-      // Popola città
       allCitta.forEach(c => {
         const option = document.createElement("option");
         option.value = c;
@@ -345,12 +795,10 @@
         const zona = (s.zona || "").toLowerCase().replace(/\s/g, "").replace(/-/g, "");
         const zonaNum = zona.match(/^(\d+)/)?.[1] || "";
 
-        // Se la ricerca è solo numeri, cerca solo per numero zona (esatto)
         if (/^\d+$/.test(searchClean)) {
           return zonaNum === searchClean;
         }
 
-        // Altrimenti cerca per nome/via/città/zona
         return nome.includes(search) || via.includes(search) || citta.includes(search) || zona.includes(searchClean);
       });
       renderStrade();
@@ -359,44 +807,81 @@
     function renderStrade() {
       const list = document.getElementById("list");
       if (filteredStrade.length === 0) {
-        list.innerHTML = '<div class="no-results">Nessuna strada trovata</div>';
+        list.innerHTML = '<div class="no-results"><span class="icon">🔍</span>Nessuna strada trovata</div>';
         return;
       }
       list.innerHTML = filteredStrade.map((s) => `
         <div class="card" onclick="selectStrada('${s.id}')">
-          <div class="card-title">${s.nome_completo || s.via}</div>
-          <div class="card-info">📍 ${s.zona || "-"}</div>
-          <div class="card-info">🔢 ${s.numeri || "-"}</div>
-          <div class="card-info">🏠 ${s.citta || "-"}</div>
+          <div class="card-title">${escapeHtml(s.nome_completo || s.via)}</div>
+          <div class="card-info">📍 ${escapeHtml(s.zona || "-")}</div>
+          <div class="card-info">🔢 ${escapeHtml(s.numeri || "-")}</div>
+          <div class="card-info">🏠 ${escapeHtml(s.citta || "-")}</div>
         </div>
       `).join("");
     }
 
     function selectStrada(id) {
-      selectedStrada = allStrade.find((s) => s.id == id);
+      selectedStrada = allStrade.find((s) => String(s.id) === String(id));
+      document.getElementById("optionsTitle").textContent = selectedStrada.nome_completo || selectedStrada.via || "";
       document.getElementById("optionsModal").classList.add("active");
     }
 
     function openMaps() {
       if (!selectedStrada) return;
       const indirizzo = `${selectedStrada.nome_completo || selectedStrada.via}, ${selectedStrada.citta}`;
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(indirizzo)}`, "_blank");
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(indirizzo)}`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.click();
       closeOptionsModal();
     }
 
-    function loginAdmin() {
+    async function loginAdmin() {
       const pwd = document.getElementById("adminPassword").value;
-      if (pwd === ADMIN_PASSWORD) {
-        isAdmin = true;
-        closeLoginModal();
-        alert("✅ Accesso riuscito!");
-      } else {
-        alert("❌ Password errata");
+      if (!pwd) {
+        showToast("Inserisci la password", "error");
+        return;
       }
+      const { error } = await supabaseClient.auth.signInWithPassword({ email: ADMIN_EMAIL, password: pwd });
+      if (error) {
+        showToast("Accesso non riuscito: credenziali errate", "error");
+        return;
+      }
+      closeLoginModal();
+      showToast("Accesso riuscito", "success");
+    }
+
+    async function logoutAdmin() {
+      await supabaseClient.auth.signOut();
+      toggleMenu();
+      showToast("Disconnesso", "success");
+    }
+
+    function updateAdminUI() {
+      document.getElementById("loginMenuItem").style.display = isAdmin ? "none" : "flex";
+      document.getElementById("logoutMenuItem").style.display = isAdmin ? "flex" : "none";
+    }
+
+    async function initAuth() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      isAdmin = !!session;
+      updateAdminUI();
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        isAdmin = !!session;
+        updateAdminUI();
+      });
+    }
+
+    function closeMenu() {
+      document.getElementById("menuPanel").classList.remove("active");
+      document.getElementById("menuOverlay").classList.remove("active");
     }
 
     function openAddModal() {
       if (!isAdmin) {
+        closeMenu();
         openLoginModal();
         return;
       }
@@ -410,13 +895,13 @@
       document.getElementById("addModalTitle").textContent = "Nuova Via";
       document.getElementById("deleteBtn").innerHTML = "";
       document.getElementById("addModal").classList.add("active");
-      toggleMenu();
+      closeMenu();
     }
 
     function editStrada() {
       if (!selectedStrada) return;
       if (!isAdmin) {
-        alert("❌ Accedi come admin per modificare");
+        showToast("Accedi come admin per modificare", "error");
         closeOptionsModal();
         return;
       }
@@ -428,7 +913,7 @@
       document.getElementById("numeri").value = selectedStrada.numeri || "";
       document.getElementById("citta").value = selectedStrada.citta || "";
       document.getElementById("addModalTitle").textContent = "Modifica Via";
-      document.getElementById("deleteBtn").innerHTML = '<button class="btn btn-danger" onclick="deleteStrada()">🗑️ Elimina</button>';
+      document.getElementById("deleteBtn").innerHTML = '<button class="btn btn-danger-outline" onclick="deleteStrada()">Elimina</button>';
       document.getElementById("addModal").classList.add("active");
       closeOptionsModal();
     }
@@ -438,7 +923,7 @@
       const via = document.getElementById("via").value.trim();
       const citta = document.getElementById("citta").value.trim();
       if (!via || !citta) {
-        alert("Compila almeno Via e Città");
+        showToast("Compila almeno Via e Città", "error");
         return;
       }
       const data = {
@@ -452,48 +937,47 @@
       };
       try {
         if (editingId) {
-          const { error } = await supabaseClient.from("strade_pisa").update(data).eq("id", editingId);
+          const { error } = await supabaseClient.from("strade").update(data).eq("id", editingId);
           if (error) throw error;
         } else {
-          const { error } = await supabaseClient.from("strade_pisa").insert([data]);
+          const { error } = await supabaseClient.from("strade").insert([data]);
           if (error) throw error;
         }
         closeAddModal();
-        loadStrade();
-        alert("✅ Salvato!");
+        await loadStrade();
+        showToast("Salvato", "success");
       } catch (error) {
-        alert("❌ Errore: " + error.message);
+        showToast("Errore: " + error.message, "error");
       }
     }
 
     async function deleteStrada() {
       if (!isAdmin || !editingId) return;
-      if (!confirm("Sei sicuro? Non si può annullare.")) return;
+      const ok = await showConfirm("Sei sicuro di voler eliminare questa via? L'operazione non può essere annullata.");
+      if (!ok) return;
       try {
-        const { error } = await supabaseClient.from("strade_pisa").delete().eq("id", editingId);
+        const { error } = await supabaseClient.from("strade").delete().eq("id", editingId);
         if (error) throw error;
         closeAddModal();
-        loadStrade();
-        alert("✅ Eliminato!");
+        await loadStrade();
+        showToast("Eliminato", "success");
       } catch (error) {
-        alert("❌ Errore: " + error.message);
+        showToast("Errore: " + error.message, "error");
       }
     }
 
     function exportExcel() {
-      let csv = "VIA,ZONA,NUMERI,CITTA\n";
-      allStrade.forEach((s) => {
-        csv += `"${(s.via || "").replace(/"/g, '""')}","${(s.zona || "").replace(/"/g, '""')}","${(s.numeri || "").replace(/"/g, '""')}","${(s.citta || "").replace(/"/g, '""')}"\n`;
-      });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", "Stradario.csv");
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const rows = allStrade.map((s) => ({
+        VIA: s.via || "",
+        ZONA: s.zona || "",
+        NUMERI: s.numeri || "",
+        CITTA: s.citta || "",
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      worksheet["!cols"] = [{ wch: 35 }, { wch: 12 }, { wch: 22 }, { wch: 22 }];
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Strade");
+      XLSX.writeFile(workbook, "Stradario.xlsx");
     }
 
     function toggleMenu() {
@@ -519,6 +1003,7 @@
       document.getElementById("optionsModal").classList.remove("active");
     }
 
+    initAuth();
     loadStrade();
   </script>
 </body>
