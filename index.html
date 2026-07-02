@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#d4af37" />
-  <title>Stradario Santa Croce</title>
+  <title>Stradario Pisa</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -573,7 +573,7 @@
       </button>
       <div class="header-title">
         <span class="header-icon">📍</span>
-        <h1>Stradario Santa Croce</h1>
+        <h1>Stradario Pisa</h1>
       </div>
     </div>
     <div class="search-wrap">
@@ -587,7 +587,7 @@
 
   <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
   <div class="menu-panel" id="menuPanel">
-    <div class="menu-header">📍 Stradario Santa Croce</div>
+    <div class="menu-header">📍 Stradario Pisa</div>
     <div class="menu-item" onclick="openAddModal()">➕ Nuova Via</div>
     <div class="menu-item" id="loginMenuItem" onclick="openLoginModal()">🔐 Accedi Admin</div>
     <div class="menu-item" id="logoutMenuItem" onclick="logoutAdmin()" style="display:none">🔓 Esci Admin</div>
@@ -742,7 +742,7 @@
         <div class="loading-state"><div class="spinner"></div>Caricamento strade...</div>
       `;
       try {
-        const { data, error } = await supabaseClient.from("strade").select("*").order("nome_completo");
+        const { data, error } = await supabaseClient.from("strade_pisa").select("*").order("nome_completo");
         if (error) throw error;
         allStrade = data || [];
 
@@ -937,10 +937,10 @@
       };
       try {
         if (editingId) {
-          const { error } = await supabaseClient.from("strade").update(data).eq("id", editingId);
+          const { error } = await supabaseClient.from("strade_pisa").update(data).eq("id", editingId);
           if (error) throw error;
         } else {
-          const { error } = await supabaseClient.from("strade").insert([data]);
+          const { error } = await supabaseClient.from("strade_pisa").insert([data]);
           if (error) throw error;
         }
         closeAddModal();
@@ -956,7 +956,7 @@
       const ok = await showConfirm("Sei sicuro di voler eliminare questa via? L'operazione non può essere annullata.");
       if (!ok) return;
       try {
-        const { error } = await supabaseClient.from("strade").delete().eq("id", editingId);
+        const { error } = await supabaseClient.from("strade_pisa").delete().eq("id", editingId);
         if (error) throw error;
         closeAddModal();
         await loadStrade();
