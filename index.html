@@ -77,6 +77,15 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .header-count {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.9;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-left: 8px;
+    }
     .menu-btn {
       background: rgba(255, 255, 255, 0.22);
       border: 1px solid rgba(255, 255, 255, 0.35);
@@ -574,6 +583,7 @@
       <div class="header-title">
         <span class="header-icon">📍</span>
         <h1>Stradario Pisa</h1>
+        <span class="header-count" id="headerCount">--</span>
       </div>
     </div>
     <div class="search-wrap">
@@ -742,9 +752,24 @@
         <div class="loading-state"><div class="spinner"></div>Caricamento strade...</div>
       `;
       try {
-        const { data, error } = await supabaseClient.from("strade_pisa").select("*").order("nome_completo");
-        if (error) throw error;
-        allStrade = data || [];
+        allStrade = [];
+        let page = 0;
+        let hasMore = true;
+        while (hasMore) {
+          const start = page * 1000;
+          const end = start + 999;
+          const { data, error } = await supabaseClient.from("strade_pisa").select("*").order("via").range(start, end);
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            hasMore = false;
+          } else {
+            allStrade = allStrade.concat(data);
+            if (data.length < 1000) hasMore = false;
+            page++;
+          }
+        }
+        document.getElementById("headerCount").textContent = `${allStrade.length} strade`;
+        console.log(`Caricate ${allStrade.length} strade`);
 
         allZone = [...new Set(allStrade.map(s => s.zona).filter(z => z))].sort();
         allCitta = [...new Set(allStrade.map(s => s.citta).filter(c => c))].sort();
@@ -800,7 +825,7 @@
         }
 
         return nome.includes(search) || via.includes(search) || citta.includes(search) || zona.includes(searchClean);
-      });
+      }).sort((a, b) => (a.via || "").localeCompare(b.via || ""));
       renderStrade();
     }
 
