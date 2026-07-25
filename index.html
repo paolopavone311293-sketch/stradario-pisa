@@ -824,9 +824,9 @@
 
       const searchClean = search.replace(/\s/g, "").replace(/-/g, "");
       filteredStrade = allStrade.filter((s) => {
-        const nome = (s.nome_completo || "").toLowerCase();
-        const via = (s.via || "").toLowerCase();
-        const citta = (s.citta || "").toLowerCase();
+        const nome = (s.nome_completo || "").toLowerCase().replace(/\s/g, "").replace(/-/g, "");
+        const via = (s.via || "").toLowerCase().replace(/\s/g, "").replace(/-/g, "");
+        const citta = (s.citta || "").toLowerCase().replace(/\s/g, "").replace(/-/g, "");
         const zona = (s.zona || "").toLowerCase().replace(/\s/g, "").replace(/-/g, "");
         const zonaNum = zona.match(/^(\d+)/)?.[1] || "";
 
@@ -834,9 +834,22 @@
           return zonaNum === searchClean;
         }
 
-        return nome.includes(search) || via.includes(search) || citta.includes(search) || zona.includes(searchClean);
+        return nome.includes(searchClean) || via.includes(searchClean) || citta.includes(searchClean) || zona.includes(searchClean);
       }).sort((a, b) => (a.via || "").localeCompare(b.via || ""));
       renderStrade();
+    }
+
+    const COMUNE_COLORS = {
+      "pisa": "#e0b43a",
+      "sangiulianoterme": "#38bdf8",
+      "vecchiano": "#8b5cf6",
+      "calci": "#f0466e",
+      "cascina": "#34c9a3",
+    };
+
+    function comuneColor(citta) {
+      const key = (citta || "").toLowerCase().replace(/[^a-z]/g, "");
+      return COMUNE_COLORS[key] || "var(--gold)";
     }
 
     function renderStrade() {
@@ -845,16 +858,19 @@
         list.innerHTML = '<div class="no-results"><span class="icon">🔍</span>Nessuna strada trovata</div>';
         return;
       }
-      list.innerHTML = filteredStrade.map((s) => `
-        <div class="card" onclick="selectStrada('${s.id}')">
+      list.innerHTML = filteredStrade.map((s) => {
+        const color = comuneColor(s.citta);
+        return `
+        <div class="card" style="border-left-color:${color}" onclick="selectStrada('${s.id}')">
           <div class="card-title">
             <span>${escapeHtml(s.nome_completo || s.via)}</span>
             <span class="card-zona">${escapeHtml(s.zona || "-")}</span>
           </div>
           <div class="card-info">🔢 ${escapeHtml(s.numeri || "-")}</div>
-          <div class="card-info">🏠 ${escapeHtml(s.citta || "-")}</div>
+          <div class="card-info" style="color:${color};font-weight:600">🏠 ${escapeHtml(s.citta || "-")}</div>
         </div>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function selectStrada(id) {
